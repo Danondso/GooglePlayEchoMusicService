@@ -33,25 +33,43 @@ def initialize_echo_play():
 
 @ask.intent("PlaySingleSongIntent")
 def play_single_song(query):
-    search_result = api.search(query)
+    try:
+        if query is '':
+            raise ValueError
 
-    stream_url = api.get_stream_url(search_result['song_hits'][0]['track']['nid'], quality=u'hi')
-    song_info = "Playing " + search_result['song_hits'][0]['track']['title'] \
-                + " by " \
-                + search_result['song_hits'][0]['track']['artist']
-    return audio(speech=song_info).play(stream_url=stream_url) \
-        .simple_card(title="Google Music",
-                     content=song_info)
+        search_result = api.search(query)
 
+        stream_url = api.get_stream_url(search_result['song_hits'][0]['track']['nid'], quality=u'hi')
+
+        song_info = "Playing " + search_result['song_hits'][0]['track']['title'] \
+                    + " by " + search_result['song_hits'][0]['track']['artist']
+
+        return audio(speech=song_info).play(stream_url=stream_url) \
+            .simple_card(title="Google Music",
+                         content=song_info)
+
+    except (ValueError, IndexError) as e:
+        return statement(render_template('unable_to_find_song')) \
+            .simple_card(e.with_traceback())
+
+
+# @ask.intent("PlayArtistRadioIntent")
+# def start_radio(query):
+#     search_result = api.search(query)
+#     stream_url = api.get_stream_url(search_result['station_hits'][0]['track']['nid'], quality=u'hi')
+#     return audio(speech=song_info).play(stream_url=stream_url) \
+#         .simple_card(title="Google Music",
+#                      content=song_info)
 
 @ask.intent("EnqueueSongIntent")
 def enqueue_song(queue_query):
     search_result = api.search(queue_query)
     stream_url = api.get_stream_url(search_result['song_hits'][0]['track']['nid'], quality=u'hi')
-    return audio().enqueue(stream_url=stream_url)
+    queue_phrase = "Queuing " + search_result['song_hits'][0]['track']['title']
+    return audio(speech=queue_phrase).enqueue(stream_url=stream_url)
 
 
-@ask.intent("PlayNextIntent")
+@ask.intent("PlayNextIntent")  # TODO Needs implementing
 def play_next():
     return True
 
