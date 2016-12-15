@@ -2,9 +2,9 @@
 Google Play Music Backend for Amazon Echo 
 
 Things you'll need to install / have before setup:
-<a href="https://www.jetbrains.com/pycharm/download/#section=windows" target="_blank">Pycharm </a> or any Python IDE.  
+<a href="https://www.jetbrains.com/pycharm/download/#section=windows" target="_blank">Pycharm </a> or any other Python IDE.  
 <a href="https://ngrok.com/download" target="_blank">Ngrok </a> (secure tunneling over localhost)
-Google Play Subscription
+A Google Play Subscription (haven't tested free accounts with this yet)
 Echo Dot
 
 Setup Instructions:
@@ -15,4 +15,4 @@ This is only set up for development right now as I'm sure this skill won't be pu
 
 1. Create an AWS developer account at <a href="https://developer.amazon.com/" target="_blank">  Amazons Developer Site</a>
 
-#I'm tired and I want to sleep right now, I promise I'll finish this 12-13-2016
+
