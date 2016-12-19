@@ -1,0 +1,31 @@
+{
+    "intents": [
+        {
+            "intent": "AMAZON.ResumeIntent"
+        },
+        {
+            "intent": "AMAZON.PauseIntent"
+        },
+      {
+        "intent":"AMAZON.NextIntent"
+      },
+        {
+            "intent": "PlaySingleSongIntent",
+          	"slots": [
+              {
+                "name": "query",
+                "type": "QUERY"
+              }
+            ]
+        },
+      {
+        "intent": "EnqueueSongIntent",
+        "slots": [
+        {
+        "name": "queue_query",
+         "type": "QUERY"
+      }
+        ]
+      }
+    ]
+}
