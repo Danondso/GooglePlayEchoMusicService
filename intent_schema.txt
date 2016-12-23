@@ -1,31 +1,34 @@
 {
     "intents": [
         {
-            "intent": "AMAZON.ResumeIntent"
+      "intent": "PlaySingleSongIntent",
+      "slots": [
+        {
+          "name": "query",
+          "type": "AMAZON.MusicRecording"
+        }
+      ]
         },
+        {
+      "intent": "EnqueueSongIntent",
+      "slots": [
+        {
+          "name": "queue_query",
+          "type": "AMAZON.MusicRecording"
+        }
+      ]
+        },
+        {
+            "intent": "PlayNextIntent"
+        }, 
         {
             "intent": "AMAZON.PauseIntent"
         },
-      {
-        "intent":"AMAZON.NextIntent"
-      },
         {
-            "intent": "PlaySingleSongIntent",
-          	"slots": [
-              {
-                "name": "query",
-                "type": "QUERY"
-              }
-            ]
+            "intent": "AMAZON.ResumeIntent"
         },
-      {
-        "intent": "EnqueueSongIntent",
-        "slots": [
         {
-        "name": "queue_query",
-         "type": "QUERY"
-      }
-        ]
-      }
+            "intent": "SkipSongIntent"
+        }
     ]
 }
