@@ -1,4 +1,3 @@
-
 from gmusicapi import Mobileclient
 import logging
 
@@ -10,7 +9,7 @@ app = Flask(__name__)
 
 api = Mobileclient()
 
-ask = Ask(app, "/googlemusic")
+ask = Ask(app, "/")
 # logging.DEBUG for when breaks
 logging.getLogger("flask_ask").setLevel(logging.INFO)
 
@@ -54,14 +53,12 @@ def play_single_song(query):
         return statement(render_template('unable_to_find_song')) \
             .simple_card(e.with_traceback())
 
-
 @ask.intent("PlayArtistRadioIntent")
 def start_radio(query):
     search_result = api.search(query)
     stream_url = api.get_stream_url(search_result['station_hits'][0]['track']['nid'], quality=u'hi')
     return audio(speech='song_info').play(stream_url) \
         .simple_card(title="Google Music", content="song_info")
-
 
 # Need to make a dictionary or something
 
@@ -84,16 +81,13 @@ def enqueue_song(queue_query):
             .simple_card(title="Google Music",
                          content= e.with_traceback())
 
-
 @ask.intent("PlayNextIntent")  # TODO Needs implementing
 def play_next():
     return True
 
-
 @ask.intent("AMAZON.PauseIntent")
 def pause_song():
     return audio().stop()
-
 
 @ask.intent("AMAZON.ResumeIntent")
 def resume_song():
@@ -102,7 +96,6 @@ def resume_song():
 @ask.intent("SkipSongIntent")
 def skip_song():
     return audio(speech="paused").s
-
 
 if __name__ == '__main__':
     app.run(debug=True)
