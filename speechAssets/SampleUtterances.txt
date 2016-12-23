@@ -1,0 +1,6 @@
+PlaySingleSongIntent play {query}
+
+EnqueueSongIntent queue {queue_query}
+EnqueueSongIntent next play {queue_query}
+EnqueueSongIntent add {queue_query}
+EnqueueSongIntent append {queue_query}
