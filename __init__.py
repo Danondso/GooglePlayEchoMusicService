@@ -1,3 +1,4 @@
+
 from gmusicapi import Mobileclient
 import logging
 
@@ -9,20 +10,21 @@ app = Flask(__name__)
 
 api = Mobileclient()
 
-ask = Ask(app, "/")
-
-logging.getLogger("flask_ask").setLevel(logging.DEBUG)
+ask = Ask(app, "/googlemusic")
+# logging.DEBUG for when breaks
+logging.getLogger("flask_ask").setLevel(logging.INFO)
 
 
 # Build a credentials storage setup or something, fuck this plaintext shit
-def login():
-    return api.login('email', 'password', 'android_id')
-
+login = api.login('USERNAME', 'PASSWORD', Mobileclient.FROM_MAC_ADDRESS)
 
 # def retrieve_single_song_result(query):
 @ask.launch
 def initialize_echo_play():
-    if login() is True:
+    if api.is_authenticated() is True:
+        return statement(render_template('welcome')) \
+            .simple_card(title="Echo Play", content="Logged in successfully.")
+    elif login is True:
         return statement(render_template('welcome')) \
             .simple_card(title="Echo Play", content="Logged in successfully.")
     else:
@@ -30,7 +32,7 @@ def initialize_echo_play():
             .simple_card(title="Echo Play",
                          content="Failed to login.")  # TODO maybe print out the exception if there is one?
 
-
+#return audio(speech = []).play([], offset=[number in milliseconds])
 @ask.intent("PlaySingleSongIntent")
 def play_single_song(query):
     try:
@@ -44,7 +46,7 @@ def play_single_song(query):
         song_info = "Playing " + search_result['song_hits'][0]['track']['title'] \
                     + " by " + search_result['song_hits'][0]['track']['artist']
 
-        return audio(speech=song_info).play(stream_url=stream_url) \
+        return audio(speech=song_info).play(stream_url) \
             .simple_card(title="Google Music",
                          content=song_info)
 
@@ -53,20 +55,34 @@ def play_single_song(query):
             .simple_card(e.with_traceback())
 
 
-# @ask.intent("PlayArtistRadioIntent")
-# def start_radio(query):
-#     search_result = api.search(query)
-#     stream_url = api.get_stream_url(search_result['station_hits'][0]['track']['nid'], quality=u'hi')
-#     return audio(speech=song_info).play(stream_url=stream_url) \
-#         .simple_card(title="Google Music",
-#                      content=song_info)
+@ask.intent("PlayArtistRadioIntent")
+def start_radio(query):
+    search_result = api.search(query)
+    stream_url = api.get_stream_url(search_result['station_hits'][0]['track']['nid'], quality=u'hi')
+    return audio(speech='song_info').play(stream_url) \
+        .simple_card(title="Google Music", content="song_info")
+
+
+# Need to make a dictionary or something
 
 @ask.intent("EnqueueSongIntent")
 def enqueue_song(queue_query):
-    search_result = api.search(queue_query)
-    stream_url = api.get_stream_url(search_result['song_hits'][0]['track']['nid'], quality=u'hi')
-    queue_phrase = "Queuing " + search_result['song_hits'][0]['track']['title']
-    return audio(speech=queue_phrase).enqueue(stream_url=stream_url)
+    try:
+        if queue_query is '':
+            raise ValueError
+
+        search_result = api.search(queue_query)
+        stream_url = api.get_stream_url(search_result['song_hits'][0]['track']['nid'], quality=u'hi')
+        queue_phrase = "Queuing " + search_result['song_hits'][0]['track']['title']
+
+        return audio(speech=queue_phrase).enqueue(stream_url) \
+                .simple_card(title="Google Music",
+                             content=queue_phrase)
+
+    except (ValueError, IndexError) as e:
+        return statement("Unable to queue the song") \
+            .simple_card(title="Google Music",
+                         content= e.with_traceback())
 
 
 @ask.intent("PlayNextIntent")  # TODO Needs implementing
@@ -82,7 +98,6 @@ def pause_song():
 @ask.intent("AMAZON.ResumeIntent")
 def resume_song():
     return audio().resume()  # Restarts song when resumed, need to fix that
-
 
 @ask.intent("SkipSongIntent")
 def skip_song():
