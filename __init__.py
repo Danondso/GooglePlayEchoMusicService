@@ -31,26 +31,34 @@ def initialize_echo_play():
                          content="Failed to login.")  # TODO maybe print out the exception if there is one?
 
 
-@ask.intent("PlaySingleSongIntent")
-def play_single_song(query):
+def get_single_song(query):
     try:
         if query is '':
             raise ValueError
-
         search_result = api.search(query)
-
-        stream_url = api.get_stream_url(search_result['song_hits'][0]['track']['nid'], quality=u'hi')
-
-        song_info = "Playing " + search_result['song_hits'][0]['track']['title'] \
-                    + " by " + search_result['song_hits'][0]['track']['artist']
-
-        return audio(speech=song_info).play(stream_url=stream_url) \
-            .simple_card(title="Google Music",
-                         content=song_info)
-
-    except (ValueError, IndexError) as e:
+        if search_result is None:
+            raise ValueError
+    except ValueError as e:
         return statement(render_template('unable_to_find_song')) \
             .simple_card(e.with_traceback())
+
+
+@ask.intent("PlaySingleSongIntent")
+def play_single_song(query):
+    search_result = get_single_song(query)
+    stream_url = api.get_stream_url(search_result['song_hits'][0]['track']['nid'], quality=u'hi')
+    song_info = "Playing " + search_result['song_hits'][0]['track']['title'] \
+                + " by " + search_result['song_hits'][0]['track']['artist']
+    return audio(speech=song_info).play(stream_url=stream_url) \
+        .simple_card(title="Google Music",
+                     content=song_info)
+
+
+@ask.intent("EnqueueSongIntent")
+def enqueue_song(queue_query):
+    search_result = get_single_song(queue_query)
+    stream_url = api.get_stream_url(search_result['song_hits'][0]['track']['nid'], quality=u'hi')
+    return audio(speech="").enqueue(stream_url=stream_url)
 
 
 # @ask.intent("PlayArtistRadioIntent")
@@ -61,15 +69,14 @@ def play_single_song(query):
 #         .simple_card(title="Google Music",
 #                      content=song_info)
 
-@ask.intent("EnqueueSongIntent")
-def enqueue_song(queue_query):
-    search_result = api.search(queue_query)
-    stream_url = api.get_stream_url(search_result['song_hits'][0]['track']['nid'], quality=u'hi')
-    queue_phrase = "Queuing " + search_result['song_hits'][0]['track']['title']
-    return audio(speech=queue_phrase).enqueue(stream_url=stream_url)
+
+#Future functionality
+#Add music to playlist through voice commands
+#delete/create playlists
 
 
-@ask.intent("PlayNextIntent")  # TODO Needs implementing
+
+@ask.intent("PlayNextIntent")
 def play_next():
     return True
 
