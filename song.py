@@ -1,11 +1,13 @@
 # Required Dependencies
 from gmusicapi import Mobileclient
 
+import loginCredentials
+
 # sets the google play Mobileclient Api to api
 api = Mobileclient()
 
-# Build a credentials storage setup or something, fuck this plaintext shit
-login = api.login('EMAIL', 'PASSWORD',
+# accesses loginCredentials.py for username and password
+login = api.login(loginCredentials.username, loginCredentials.password,
                   Mobileclient.FROM_MAC_ADDRESS)
 
 
