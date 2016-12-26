@@ -59,10 +59,10 @@ class Song:
             return statement(render_template('unable_to_find_song')) \
                 .simple_card(title="Google Music",
                              content=e.with_traceback())
+
+
 # Function to play a song
 # return audio(speech = []).play([], offset=[number in milliseconds])
-
-
 @ask.intent("PlaySingleSongIntent")
 def play_single_song(query):
     try:
