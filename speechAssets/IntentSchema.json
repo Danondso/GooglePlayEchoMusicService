@@ -13,7 +13,7 @@
       "intent": "EnqueueSongIntent",
       "slots": [
         {
-          "name": "queue_query",
+          "name": "query",
           "type": "AMAZON.MusicRecording"
         }
       ]
