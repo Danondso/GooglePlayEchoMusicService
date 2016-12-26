@@ -1,24 +1,21 @@
-//////////////////
-Sample Utterances
-//////////////////
- 
-PlaySingleSongIntent use google music to play {query}
- 
-PlaySingleSongIntent use google music to find {query}
- 
-PlaySingleSongIntent google music play {query}
- 
-PlaySingleSongIntent google music start {query}
- 
-EnqueueSongIntent use google music to queue up {queue_query}
- 
-EnqueueSongIntent queue up {queue_query}
- 
-EnqueueSongIntent add {queue_query} to queue
+# //////////////////
+# Sample Utterances
+# //////////////////
+# Here are some ways you can invoke google music with the link below.
+# https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/supported-phrases-to-begin-a-conversation
+#
+# //////////////////////////////////////////////////////
+# add these to your sample utterances interaction model
+# //////////////////////////////////////////////////////
 
 PlaySingleSongIntent play {query}
+PlaySingleSongIntent find {query}
 
-EnqueueSongIntent queue {queue_query}
-EnqueueSongIntent next play {queue_query}
-EnqueueSongIntent add {queue_query}
-EnqueueSongIntent append {queue_query}
+EnqueueSongIntent queue {query}
+EnqueueSongIntent queue up {query}
+EnqueueSongIntent next play {query}
+EnqueueSongIntent play {query} next
+EnqueueSongIntent add {query}
+EnqueueSongIntent add {query} to queue
+EnqueueSongIntent add {query} to the queue
+EnqueueSongIntent append {query}
