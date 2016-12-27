@@ -2,4 +2,4 @@
 username = "EMAIL"
 password = "PASSWORD"
 # Build a credentials storage setup or something, fuck this plaintext shit
-# (I've already send the password to a friend on accendent)
+# (I've already send the password to a friend on accident)
