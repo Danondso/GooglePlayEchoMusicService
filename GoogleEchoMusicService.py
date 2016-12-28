@@ -1,11 +1,14 @@
 # Required Dependencies
-from flask import Flask, render_template
+from flask import Flask, render_template, json
 
-from flask_ask import Ask, audio, statement
+from flask_ask import Ask, audio, statement, current_stream, logger, question
 
 import logging
+
 # imports functions from song.py
-from song import Song, google_music_login
+from song import google_music_login, QueueManager
+
+queue = QueueManager()
 
 app = Flask(__name__)
 
@@ -20,15 +23,16 @@ logging.getLogger("flask_ask").setLevel(logging.DEBUG)
 # Login in to google music and use cached key if available
 @ask.launch
 def login():
+    text = 'Welcome to Google Music. Try asking me to play a song'
+    prompt = 'You can ask me to play a song. For example say, play Scar Tissue'
     if google_music_login() is True:
-        return statement(render_template('welcome')) \
+        return question(text).reprompt(prompt) \
             .simple_card(title='Google Music',
-                         content='Welcome to Google Music. \
-                                 Try asking me to play a song.')
+                         content=text)
     else:
         return statement(render_template('login_failed')) \
             .simple_card(title="Google Music",
-                         content="Failed to login.")
+                         content=render_template('login_failed'))
 
 
 # Function to play a song
@@ -36,15 +40,17 @@ def login():
 @ask.intent("PlaySingleSongIntent")
 def play_single_song(query):
     try:
-        if query is '' or google_music_login() is False:
+        if query is '':
             raise ValueError
-        song = Song(query)
-        playing_message = "Playing" + song.info
-        return audio(speech=playing_message).play(song.url) \
+        queue.reset()
+        queue.add(query)
+        stream = queue.start()
+        playing_message = "Playing " + queue.song_info()
+        return audio(speech=playing_message).play(stream) \
             .simple_card(title="Google Music",
                          content=playing_message)
 
-    except (ValueError):
+    except (ValueError, IndexError):
         return statement(render_template('unable_to_find_song')) \
             .simple_card(title="Google Music",
                          content=render_template('unable_to_find_song'))
@@ -56,16 +62,76 @@ def enqueue_song(query):
     try:
         if query is '':
             raise ValueError
-        song = Song(query)
-        queue_message = "Queued " + song.info
-        return audio(speech="Queued").enqueue(song.url) \
-            .simple_card(title="Google Music",
-                         content=queue_message)
+        queue.add(query)
 
-    except (ValueError, IndexError) as e:
+        return statement("")
+
+    except (ValueError, IndexError):
+
         return statement("Unable to queue the song") \
             .simple_card(title="Google Music",
-                         content=e.with_traceback())
+                         content=query + "Song failed to queue.")
+
+
+@ask.on_playback_nearly_finished()
+def nearly_finished():
+    if queue.up_next:
+        _infodump('Alexa is now ready for a Next or Previous Intent')
+        next_stream = queue.up_next
+        return audio().enqueue(next_stream)
+    else:
+        _infodump('Nearly finished with last song in playlist')
+
+
+@ask.on_playback_finished()
+def play_back_finished():
+    _infodump('FINISHED Audio stream from {}'.format(current_stream.url))
+    if queue.up_next:
+        queue.step()
+    else:
+        return statement('')
+
+
+@ask.intent('AMAZON.NextIntent')
+def next_song():
+    if queue.up_next:
+        speech = 'playing next queued song'
+        next_stream = queue.step()
+        return audio(speech).play(next_stream)
+    else:
+        return audio('There are no more songs in the queue')
+
+
+@ask.intent('AMAZON.PreviousIntent')
+def previous_song():
+    if queue.previous:
+        speech = 'playing previously played song'
+        prev_stream = queue.step_back()
+        return audio(speech).play(prev_stream)
+
+    else:
+        return audio('There are no songs in your playlist history.')
+
+
+@ask.intent('AMAZON.StartOverIntent')
+def restart_track():
+    if queue.current:
+        speech = 'Restarting current track'
+        return audio(speech).play(queue.song_url(), offset=0)
+    else:
+        return statement('There is no current song')
+
+
+@ask.intent('AMAZON.PauseIntent')
+def pause():
+    msg = 'Paused the Playlist on track {}'.format(queue.current_position)
+    return audio('Paused the stream.').stop().simple_card(msg)
+
+
+@ask.intent('AMAZON.ResumeIntent')
+def resume():
+    msg = 'Resuming the Playlist on track {}'.format(queue.current_position)
+    return audio('Resuming.').resume().simple_card(msg)
 
 
 # This is all ALPHA functionality that may or may not be included
@@ -75,14 +141,7 @@ def enqueue_song(query):
 # Add music to playlist through voice commands
 # delete/create playlists
 
-# BETA testing for playlist support
-
-
-playlist = []
-
 # ALPHA testing for radio support
-
-
 @ask.intent("PlayArtistRadioIntent")
 def start_radio(query):
     search_result = api.search(query)
@@ -91,37 +150,18 @@ def start_radio(query):
     return audio(speech=song_info).play(stream_url) \
         .simple_card(title="Google Music",
                      content=song_info)
-
-# ALPHA testing for skip support
-
-
-@ask.intent("PlayNextIntent")  # TODO Needs implementing
-def play_next():
-    return True
-
-# ALPHA testing for pause support
-
-
-@ask.intent("AMAZON.PauseIntent")
-def pause_song():
-    return audio().stop()
-
-# ALPHA testing for resume support
-
-
-@ask.intent("AMAZON.ResumeIntent")
-def resume_song():
-    return audio().resume()  # Restarts song when resumed, need to fix that
-
-# ALPHA testing for skip song support
-
-
-@ask.intent("SkipSongIntent")
-def skip_song():
-    return audio(speech="paused").s
-
-# Some debug function that is needed by flask
 '''
+
+
+@ask.session_ended
+def session_ended():
+    return "", 200
+
+
+def _infodump(obj, indent=2):
+    msg = json.dumps(obj, indent=indent)
+    logger.info(msg + '\n')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
