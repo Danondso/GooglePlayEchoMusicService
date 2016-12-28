@@ -19,16 +19,19 @@
       ]
         },
         {
-            "intent": "PlayNextIntent"
+            "intent": "AMAZON.NextIntent"
         }, 
+        {
+            "intent": "AMAZON.PreviousIntent"
+        },
+        {
+            "intent": "AMAZON.StartOverIntent"
+        },
         {
             "intent": "AMAZON.PauseIntent"
         },
         {
             "intent": "AMAZON.ResumeIntent"
-        },
-        {
-            "intent": "SkipSongIntent"
         }
     ]
 }
