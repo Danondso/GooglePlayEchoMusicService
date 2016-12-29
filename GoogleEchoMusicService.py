@@ -7,6 +7,8 @@ import logging
 # imports functions from song.py
 from song import Song, google_music_login
 
+import time
+
 app = Flask(__name__)
 
 # The directory that you want this to run on
@@ -39,12 +41,16 @@ def play_single_song(query):
         if query is '' or google_music_login() is False:
             raise ValueError
         song = Song(query)
+        Song.url = song.url
+
         playing_message = "Playing" + song.info
+        Song.duration = song.duration
+        Song.song_get_timestamp = int(round(time.time() * 1000))
         return audio(speech=playing_message).play(song.url) \
             .simple_card(title="Google Music",
                          content=playing_message)
 
-    except (ValueError):
+    except ValueError:
         return statement(render_template('unable_to_find_song')) \
             .simple_card(title="Google Music",
                          content=render_template('unable_to_find_song'))
@@ -66,6 +72,20 @@ def enqueue_song(query):
         return statement("Unable to queue the song") \
             .simple_card(title="Google Music",
                          content=e.with_traceback())
+
+
+# ALPHA testing for pause support
+@ask.intent("AMAZON.PauseIntent")
+def pause_song():
+    Song.pause_offset_time = int(round(time.time() * 1000)) - int(Song.song_get_timestamp)
+    return audio().stop()
+
+
+# ALPHA testing for resume support
+@ask.intent("AMAZON.ResumeIntent")
+def resume_song():
+    offset_time = Song.pause_offset_time
+    return audio(speech="").play(stream_url=Song.url, offset=offset_time)
 
 
 # This is all ALPHA functionality that may or may not be included
@@ -99,19 +119,6 @@ def start_radio(query):
 def play_next():
     return True
 
-# ALPHA testing for pause support
-
-
-@ask.intent("AMAZON.PauseIntent")
-def pause_song():
-    return audio().stop()
-
-# ALPHA testing for resume support
-
-
-@ask.intent("AMAZON.ResumeIntent")
-def resume_song():
-    return audio().resume()  # Restarts song when resumed, need to fix that
 
 # ALPHA testing for skip song support
 
