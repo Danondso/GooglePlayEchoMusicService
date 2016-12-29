@@ -1,13 +1,15 @@
 # Required Dependencies
 from gmusicapi import Mobileclient
 
+from fuzzywuzzy import fuzz, process
+
 import collections
 
 import loginCredentials
 
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
-
+# pp.pprint()
 # sets the google play Mobileclient Api to api
 api = Mobileclient()
 
@@ -27,6 +29,9 @@ class QueueManager:
         self.songinfo = None
         self.songartist = None
         self.songname = None
+        self.songoffset = None
+        self.playlistid = None
+        self.playlistname = None
 
     def status(self):
         status = {
@@ -69,10 +74,8 @@ class QueueManager:
             return None
 
     def add(self, query):
-        sid = self.id_fecher(query)
-        sid = sid['song_hits'][0]
         # self._sid.append(sid)
-        self._queued.append(sid)
+        self._queued.append(query)
 
 #    def extend(self, sid):
 #         self._sid.extend(sid)
@@ -98,7 +101,8 @@ class QueueManager:
 
     def reset(self):
         self._queued = collections.deque()
-        self._history = []
+        self._history = collections.deque()
+        self._current = None
 
     def start(self):
         return self.step()
@@ -113,9 +117,14 @@ class QueueManager:
         return self.id
 
     def song_url(self):
-        self.songurl = api.get_stream_url(self._current['track']['nid'],
-                                          quality=u'hi')
-        return self.songurl
+        try:
+            self.songurl = api.get_stream_url(self._current['track']
+                                              ['storeId'], quality=u'hi')
+            return self.songurl
+        except KeyError:
+            self.songurl = api.get_stream_url(self._current['trackId'],
+                                              quality=u'hi')
+            return self.songurl
 
     def song_info(self):
         self.songinfo = self._current['track']['title'] + " by " +  \
@@ -123,12 +132,49 @@ class QueueManager:
         return self.songinfo
 
     def revert(self):
-        self._queued.pop()
+        try:
+            return self._queued.pop()
+        except IndexError:
+            return None
+
+    def format_for_single_track(self, query):
+        query = self.id_fecher(query)
+        query = query['song_hits'][0]
+        return self.add(query)
+
+    def add_playlist_tracks(self, number):
+        self.playlistname = self.playlistid[number]['name']
+        self.playlistid = self.playlistid[number]['tracks']
+        count = 0
+        pp.pprint(self.playlistid)
+        for tracks in self.playlistid:
+            # pp.pprint(self.playlistid[count])
+            self.add(self.playlistid[count])
+            count += 1
+
+    def find_playlist(self, query):
+        self.playlistid = api.get_all_user_playlist_contents()
+        count = 0
+        best_playlist = None
+        best_score = 0
+        for list in self.playlistid:
+            score = fuzz.ratio(list['name'].lower().replace(" ", ""),
+                               query.lower().replace(" ", ""))
+            if score > best_score:
+                best_playlist = count
+                best_score = score
+            count += 1
+        return self.add_playlist_tracks(best_playlist)
 
 
 def song_url(nid):
-    songurl = api.get_stream_url(nid['track']['nid'],
-                                 quality=u'hi')
+    try:
+        songurl = api.get_stream_url(nid['track']['storeId'],
+                                     quality=u'hi')
+        return songurl
+    except KeyError:
+        songurl = api.get_stream_url(nid['trackId'],
+                                     quality=u'hi')
     return songurl
 
 
@@ -142,9 +188,5 @@ def google_music_login():
         return False
 
 
-# queue = QueueManager()
-# queue.reset()
-# queue.add("scar tissue")
-# queue.start()
-# print(queue._current['track']['title'])
-# pp.pprint(queue.song_url())
+# api.create_station(name, track_id=None, artist_id=None, album_id=None,
+# genre_id=None, playlist_token=None, curated_station_id=None)
