@@ -43,7 +43,8 @@ def play_single_song(query):
         if query is '':
             raise ValueError
         queue.reset()
-        queue.add(query)
+        # queue.add_playlist_tracks()
+        queue.format_for_single_track(query)
         stream = queue.start()
         playing_message = "Playing " + queue.song_info()
         return audio(speech=playing_message).play(stream) \
@@ -51,6 +52,7 @@ def play_single_song(query):
                          content=playing_message)
 
     except (ValueError, IndexError):
+        queue.revert()
         return statement(render_template('unable_to_find_song')) \
             .simple_card(title="Google Music",
                          content=render_template('unable_to_find_song'))
@@ -62,15 +64,37 @@ def enqueue_song(query):
     try:
         if query is '':
             raise ValueError
+        queue.format_for_single_track(query)
         queue.add(query)
 
         return statement("")
 
     except (ValueError, IndexError):
-
+        queue.revert()
         return statement("Unable to queue the song") \
             .simple_card(title="Google Music",
                          content=query + "Song failed to queue.")
+
+
+@ask.intent("PlayPlaylistIntent")
+def play_playlist(customPlaylists):
+    try:
+        if customPlaylists is '':
+            raise ValueError
+        queue.reset()
+        queue.find_playlist(customPlaylists)
+        stream = queue.start()
+        playing_message = "Playing songs from " + queue.playlistname
+        return audio(speech=playing_message).play(stream) \
+            .simple_card(title="Google Music",
+                         content=playing_message)
+
+    except (ValueError, IndexError):
+        msg = "No playlist was found by the name of " + customPlaylists
+        queue.reset()
+        return statement(msg) \
+            .simple_card(title="Google Music",
+                         content=render_template('unable_to_find_song'))
 
 
 @ask.on_playback_nearly_finished()
@@ -95,7 +119,7 @@ def play_back_finished():
 @ask.intent('AMAZON.NextIntent')
 def next_song():
     if queue.up_next:
-        speech = 'playing next queued song'
+        speech = 'ok'
         next_stream = queue.step()
         return audio(speech).play(next_stream)
     else:
@@ -125,7 +149,7 @@ def restart_track():
 @ask.intent('AMAZON.PauseIntent')
 def pause():
     msg = 'Paused the Playlist on track {}'.format(queue.current_position)
-    return audio('Paused the stream.').stop().simple_card(msg)
+    return audio('Pausing.').stop().simple_card(msg)
 
 
 @ask.intent('AMAZON.ResumeIntent')
@@ -140,8 +164,10 @@ def resume():
 # Future functionality
 # Add music to playlist through voice commands
 # delete/create playlists
+# shuffle playlist
 
-# ALPHA testing for radio support
+# SUPER ALPHA
+# testing for radio support
 @ask.intent("PlayArtistRadioIntent")
 def start_radio(query):
     search_result = api.search(query)
