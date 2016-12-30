@@ -29,9 +29,6 @@ class QueueManager:
         self.songinfo = None
         self.songartist = None
         self.songname = None
-        self.songduration = None
-        self.songoffset = None
-        self.songacquiredtimestamp = None
         self.playlistid = None
         self.playlistname = None
 
@@ -141,7 +138,6 @@ class QueueManager:
 
     def format_for_single_track(self, query):
         query = self.id_fecher(query)
-        self.songduration = query['song_hits'][0]['track']['durationMillis']
         query = query['song_hits'][0]
         return self.add(query)
 

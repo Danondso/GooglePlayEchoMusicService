@@ -2,7 +2,7 @@
 import time
 from flask import Flask, render_template, json
 
-from flask_ask import Ask, audio, statement, current_stream, logger, question
+from flask_ask import Ask, audio, statement, current_stream, logger, question, context
 
 import logging
 
@@ -47,7 +47,6 @@ def play_single_song(query):
         # queue.add_playlist_tracks()
         queue.format_for_single_track(query)
         stream = queue.start()
-        queue.songacquiredtimestamp = int(round(time.time()) * 1000)
         playing_message = "Playing " + queue.song_info()
         return audio(speech=playing_message).play(stream) \
             .simple_card(title="Google Music",
@@ -151,14 +150,14 @@ def restart_track():
 @ask.intent('AMAZON.PauseIntent')
 def pause():
     msg = 'Paused the Playlist on track {}'.format(queue.current_position)
-    queue.songoffset = int(round(time.time()) * 1000) - queue.songacquiredtimestamp
     return audio('Pausing.').stop().simple_card(msg)
 
 
 @ask.intent('AMAZON.ResumeIntent')
 def resume():
     msg = 'Resuming the Playlist on track {}'.format(queue.current_position)
-    return audio('Resuming.').play(stream_url=queue.song_url(), offset=(queue.songoffset)).simple_card(msg)
+    return audio('Resuming.').play(stream_url=queue.song_url(),
+                                   offset=int(context['AudioPlayer']['offsetInMilliseconds'])).simple_card(msg)
 
 
 # This is all ALPHA functionality that may or may not be included
