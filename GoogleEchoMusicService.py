@@ -156,6 +156,7 @@ def pause():
 @ask.intent('AMAZON.ResumeIntent')
 def resume():
     msg = 'Resuming the Playlist on track {}'.format(queue.current_position)
+    # current_stream['offsetInMilliseconds'] =
     return audio('Resuming.').play(stream_url=queue.song_url(),
                                    offset=int(context['AudioPlayer']['offsetInMilliseconds'])).simple_card(msg)
 
