@@ -1,4 +1,7 @@
+This repo is no longer in development. You'll want to check out <a href="https://github.com/stevenleeg/geemusic/"target="_blank"> Geemusic </a> instead.
+
 # GooglePlayEchoMusicService #
+
 Google Play Music Backend for Amazon Echo 
 ### NOTE ###
 This is only set up for development right now as I'm sure this skill won't be published ever. I just really didn't want to buy another music subscription. 
