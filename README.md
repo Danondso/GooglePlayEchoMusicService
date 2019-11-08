@@ -1,4 +1,4 @@
-This repo is no longer in development. You'll want to check out <a href="https://github.com/stevenleeg/geemusic/"target="_blank"> Geemusic </a> instead.
+This repo is no longer in development. You'll want to check out [Geemusic](https://github.com/stevenleeg/geemusic/) instead.
 
 # GooglePlayEchoMusicService #
 
